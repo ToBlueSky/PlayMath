@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { Icon } from './Icons'
+import { useTranslate } from '../i18n/i18n'
 
 export type DimensionKey = 'length' | 'width' | 'height'
 
@@ -11,25 +12,28 @@ type DimensionControlProps = {
   selected: boolean
 }
 
-const meta: Record<DimensionKey, { label: string; name: string; color: string; hint: string }> = {
-  length: { label: '长', name: '长度', color: '#f39a68', hint: '左右拖动' },
-  width: { label: '宽', name: '宽度', color: '#6fc6ed', hint: '上下拖动' },
-  height: { label: '高', name: '高度', color: '#83d4b5', hint: '上下拖动' },
+const meta: Record<DimensionKey, { name: string; color: string }> = {
+  length: { name: 'dimensionLength', color: '#f39a68' },
+  width: { name: 'dimensionWidth', color: '#6fc6ed' },
+  height: { name: 'dimensionHeight', color: '#83d4b5' },
 }
 
 export function DimensionControl({ dimension, value, onChange, onSelect, selected }: DimensionControlProps) {
+  const t = useTranslate()
   const item = meta[dimension]
+  const hintKey = dimension === 'length' ? 'dimensionLengthHint' : 'dimensionRowHint'
+  const letterKey = dimension === 'length' ? 'dimensionLengthLetter' : 'dimensionShortLetter'
 
   return (
     <div className={`dimension-control ${selected ? 'is-selected' : ''}`} style={{ '--dimension-color': item.color } as CSSProperties}>
       <button className="dimension-label" type="button" onClick={onSelect} aria-pressed={selected}>
-        <span className="dimension-letter">{item.label}</span>
+        <span className="dimension-letter">{t(letterKey)}</span>
         <span>
-          <strong>{item.name}</strong>
-          <small>{item.hint}</small>
+          <strong>{t(item.name)}</strong>
+          <small>{t(hintKey)}</small>
         </span>
       </button>
-      <button className="step-button" type="button" onClick={() => onChange(value - 1)} aria-label={`${item.name}减一`}>
+      <button className="step-button" type="button" onClick={() => onChange(value - 1)} aria-label={t('dimensionDecrement', t(item.name))}>
         −
       </button>
       <input
@@ -40,9 +44,9 @@ export function DimensionControl({ dimension, value, onChange, onSelect, selecte
         step="1"
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        aria-label={`${item.name}，当前 ${value} 厘米`}
+        aria-label={t('dimensionRange', t(item.name), value)}
       />
-      <button className="step-button" type="button" onClick={() => onChange(value + 1)} aria-label={`${item.name}加一`}>
+      <button className="step-button" type="button" onClick={() => onChange(value + 1)} aria-label={t('dimensionIncrement', t(item.name))}>
         +
       </button>
       <label className="dimension-value">
@@ -52,9 +56,9 @@ export function DimensionControl({ dimension, value, onChange, onSelect, selecte
           max="6"
           value={value}
           onChange={(event) => onChange(Number(event.target.value))}
-          aria-label={`输入${item.name}`}
+          aria-label={t('dimensionInput', t(item.name))}
         />
-        <span>厘米</span>
+        <span>{t('unitCm')}</span>
       </label>
       <Icon name="cube" size={14} className="dimension-cube" />
     </div>

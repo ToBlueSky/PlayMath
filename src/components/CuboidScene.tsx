@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import type { ThreeEvent } from '@react-three/fiber'
 import type { DimensionKey } from './DimensionControl'
+import { useTranslate } from '../i18n/i18n'
 
 export type CuboidDimensions = {
   length: number
@@ -109,6 +110,12 @@ function UnitCubes({ dimensions }: { dimensions: CuboidDimensions }) {
   return <>{cubes}</>
 }
 
+function DimensionTag({ dimension, value, active }: { dimension: DimensionKey; value: number; active: boolean }) {
+  const t = useTranslate()
+  const text: Record<DimensionKey, string> = { length: t('legendLength'), width: t('legendWidth'), height: t('legendHeight') }
+  return <span className={`scene-dimension-tag ${active ? 'is-active' : ''}`}>{text[dimension]} {value}</span>
+}
+
 function CuboidModel({ dimensions, selectedDimension, showUnits, onSelectDimension, onChangeDimension }: Omit<CuboidSceneProps, 'resetToken'>) {
   const { length, width, height } = dimensions
   const frontZ = width / 2 + 0.1
@@ -141,13 +148,13 @@ function CuboidModel({ dimensions, selectedDimension, showUnits, onSelectDimensi
       <ResizeHandle dimension="width" position={[rightX, topY, 0]} selected={selectedDimension === 'width'} onSelect={() => onSelectDimension('width')} onChange={(delta) => onChangeDimension('width', delta)} />
       <ResizeHandle dimension="height" position={[rightX, 0, frontZ]} selected={selectedDimension === 'height'} onSelect={() => onSelectDimension('height')} onChange={(delta) => onChangeDimension('height', delta)} />
       <Html position={[0, topY + 0.2, frontZ]} center distanceFactor={8}>
-        <span className={`scene-dimension-tag ${selectedDimension === 'length' ? 'is-active' : ''}`}>长 {length}</span>
+        <DimensionTag dimension="length" value={length} active={selectedDimension === 'length'} />
       </Html>
       <Html position={[rightX + 0.05, topY + 0.2, 0]} center distanceFactor={8}>
-        <span className={`scene-dimension-tag ${selectedDimension === 'width' ? 'is-active' : ''}`}>宽 {width}</span>
+        <DimensionTag dimension="width" value={width} active={selectedDimension === 'width'} />
       </Html>
       <Html position={[rightX + 0.25, 0, frontZ]} center distanceFactor={8}>
-        <span className={`scene-dimension-tag ${selectedDimension === 'height' ? 'is-active' : ''}`}>高 {height}</span>
+        <DimensionTag dimension="height" value={height} active={selectedDimension === 'height'} />
       </Html>
     </group>
   )

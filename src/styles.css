@@ -82,6 +82,7 @@ button:disabled {
 
 .brand,
 .nav-link,
+.lang-button,
 .sound-button,
 .back-button,
 .text-button,
@@ -227,6 +228,22 @@ button:disabled {
 .sound-button:hover {
   background: #e6f4ed;
   color: var(--ink);
+}
+
+.lang-button {
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: #e3f3ea;
+  color: #2f6b55;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  transition: background .2s ease, color .2s ease;
+}
+
+.lang-button:hover {
+  background: #cdeade;
+  color: #1f5543;
 }
 
 .mini-avatar {

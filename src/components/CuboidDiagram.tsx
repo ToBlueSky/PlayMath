@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import type { CuboidDimensions } from './CuboidScene'
 import { Icon } from './Icons'
+import { useTranslate } from '../i18n/i18n'
 
 type CuboidDiagramProps = {
   dimensions: CuboidDimensions
 }
 
 export function CuboidDiagram({ dimensions }: CuboidDiagramProps) {
+  const t = useTranslate()
   const { length, width, height } = dimensions
   const baseArea = length * width
   const volume = baseArea * height
@@ -45,7 +47,7 @@ export function CuboidDiagram({ dimensions }: CuboidDiagramProps) {
   const cellsToShow = Math.min(baseArea, 36)
 
   return (
-    <div className="diagram-view" aria-label={`长方体二维拆解图，长${length}，宽${width}，高${height}`}>
+    <div className="diagram-view" aria-label={t('diagramAria', length, width, height)}>
       <div className="diagram-canvas-wrap">
         <svg className="diagram-svg" viewBox="0 0 440 245" role="img">
           <defs>
@@ -80,35 +82,35 @@ export function CuboidDiagram({ dimensions }: CuboidDiagramProps) {
           <g className="diagram-label diagram-label-length">
             <path d={`M${x} ${y + frontHeight + 17}h${frontWidth}`} />
             <path d={`m${x + 1} ${y + frontHeight + 13}-5 4 5 4m${frontWidth - 1 - 1} -8 5 4-5 4`} />
-            <text x={x + frontWidth / 2} y={y + frontHeight + 34} textAnchor="middle">长 {length} cm</text>
+            <text x={x + frontWidth / 2} y={y + frontHeight + 34} textAnchor="middle">{t('legendLength')} {length} cm</text>
           </g>
           <g className="diagram-label diagram-label-height">
             <path d={`M${x - 17} ${y}v${frontHeight}`} />
             <path d={`m${x - 21} ${y + 1}4-5 4 5m-8 ${frontHeight - 1}4 5 4-5`} />
-            <text x={x - 27} y={y + frontHeight / 2} textAnchor="middle" transform={`rotate(-90 ${x - 27} ${y + frontHeight / 2})`}>高 {height} cm</text>
+            <text x={x - 27} y={y + frontHeight / 2} textAnchor="middle" transform={`rotate(-90 ${x - 27} ${y + frontHeight / 2})`}>{t('legendHeight')} {height} cm</text>
           </g>
           <g className="diagram-label diagram-label-width">
             <path d={`M${x + frontWidth + 4} ${y - 4}l${depthX} -${depthY}`} />
-            <text x={x + frontWidth + depthX / 2 + 12} y={y - depthY - 9} textAnchor="middle">宽 {width} cm</text>
+            <text x={x + frontWidth + depthX / 2 + 12} y={y - depthY - 9} textAnchor="middle">{t('legendWidth')} {width} cm</text>
           </g>
         </svg>
       </div>
       <div className="diagram-explanation">
         <div className="layer-visual">
-          <div className="layer-visual-title"><span className="layer-dot" />一层小方块</div>
+          <div className="layer-visual-title"><span className="layer-dot" />{t('oneLayer')}</div>
           <div className="mini-cubes" aria-hidden="true">
             {Array.from({ length: cellsToShow }).map((_, index) => <span key={index} />)}
             {baseArea > cellsToShow && <b>+{baseArea - cellsToShow}</b>}
           </div>
-          <p>{length} × {width} = <strong>{baseArea}</strong> 个</p>
+          <p>{length} × {width} = <strong>{baseArea}</strong> {t('unitCm')}</p>
         </div>
         <div className="diagram-math">
-          <div className="diagram-math-heading"><span className="math-kicker">一层一层堆起来</span><button className="diagram-play-button" type="button" onClick={() => setIsPlaying(true)} disabled={isPlaying}><Icon name="play" size={12} />{isPlaying ? '堆叠中' : '播放动画'}</button></div>
-          <div className="layer-stack" aria-label={`已经显示 ${displayedLayers} 层，共 ${height} 层`}>
-            {Array.from({ length: height }).map((_, index) => <span className={index < visibleLayers ? 'layer-bar is-visible' : 'layer-bar'} key={index}>第 {index + 1} 层</span>)}
+          <div className="diagram-math-heading"><span className="math-kicker">{t('stackHeading')}</span><button className="diagram-play-button" type="button" onClick={() => setIsPlaying(true)} disabled={isPlaying}><Icon name="play" size={12} />{isPlaying ? t('stacking') : t('playAnimation')}</button></div>
+          <div className="layer-stack" aria-label={t('stackAria', displayedLayers, height)}>
+            {Array.from({ length: height }).map((_, index) => <span className={index < visibleLayers ? 'layer-bar is-visible' : 'layer-bar'} key={index}>{t('layerN', index + 1)}</span>)}
           </div>
           <strong>{baseArea} × {displayedLayers} = {baseArea * displayedLayers}</strong>
-          <small>立方厘米</small>
+          <small>{t('cubicCm')}</small>
         </div>
       </div>
     </div>

@@ -4,33 +4,12 @@ import { CuboidScene, type CuboidDimensions } from './components/CuboidScene'
 import { DimensionControl, type DimensionKey } from './components/DimensionControl'
 import { Icon } from './components/Icons'
 import { Mascot } from './components/Mascot'
+import { useLanguage, useTranslate } from './i18n/i18n'
 
 type Page = 'home' | 'lesson'
 type DisplayMode = '3d' | '2d'
 
 const INITIAL_DIMENSIONS: CuboidDimensions = { length: 4, width: 3, height: 2 }
-const DIMENSION_NAMES: Record<DimensionKey, string> = { length: '长', width: '宽', height: '高' }
-
-const lessonTasks = [
-  {
-    eyebrow: '第一站 · 先玩一玩',
-    title: '让盒子长高一点',
-    description: '拖动绿色的小点，看看盒子里能多放进几层小方块。',
-    hint: '试着把“高”从 2 变成 3。',
-  },
-  {
-    eyebrow: '第二站 · 找到规律',
-    title: '把体积调成 24 立方厘米',
-    description: '改变长、宽、高，找到一个刚好装下 24 个小方块的盒子。',
-    hint: '现在的盒子刚好是 4 × 3 × 2。',
-  },
-  {
-    eyebrow: '第三站 · 小小设计师',
-    title: '再找一个不同的盒子',
-    description: '保持体积不变，试着设计一个和刚才不一样的长方体。',
-    hint: '想想看，2 × 3 × 4 还可以怎样组合？',
-  },
-]
 
 function getSavedProgress() {
   try {
@@ -54,6 +33,8 @@ function clampDimension(value: number) {
 }
 
 function App() {
+  const t = useTranslate()
+  const { lang, setLang } = useLanguage()
   const [page, setPage] = useState<Page>('home')
   const [dimensions, setDimensions] = useState<CuboidDimensions>(INITIAL_DIMENSIONS)
   const [selectedDimension, setSelectedDimension] = useState<DimensionKey>('height')
@@ -75,6 +56,7 @@ function App() {
     taskCompleted[1] && volume === 24 && !isInitialSize,
   ], [hasExplored, volume, isInitialSize, dimensions.height, taskCompleted])
 
+  const lessonTasks = useMemo<LessonTask[]>(() => t('tasks') as unknown as LessonTask[], [t])
   const currentTask = lessonTasks[activeTask]
   const completedTasks = taskCompleted
   const currentTaskComplete = taskCompleted[activeTask] || taskCanBeCompleted[activeTask]
@@ -133,21 +115,22 @@ function App() {
         <button className="brand" type="button" onClick={() => setPage('home')} aria-label="返回小小数学家首页">
           <span className="brand-mark"><span /><span /><span /></span>
           <span className="brand-copy">
-            <strong>小小数学家</strong>
-            <small>让数学动起来</small>
+            <strong>{t('brandTitle')}</strong>
+            <small>{t('brandSubtitle')}</small>
           </span>
         </button>
         <nav className="main-nav" aria-label="主导航">
           <button className={page === 'home' ? 'nav-link active' : 'nav-link'} type="button" onClick={() => setPage('home')}>
-            <Icon name="home" size={16} />首页
+            <Icon name="home" size={16} />{t('navHome')}
           </button>
           <button className={page === 'lesson' ? 'nav-link active' : 'nav-link'} type="button" onClick={openLesson}>
-            <Icon name="cube" size={16} />我的探索
+            <Icon name="cube" size={16} />{t('navLesson')}
           </button>
         </nav>
         <div className="header-actions">
+          <button className="lang-button" type="button" onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')} aria-label={lang === 'zh' ? 'Switch to English' : '切换到中文'}>{t('langSwitch')}</button>
           <button className="sound-button" type="button" aria-label="打开声音设置"><Icon name="volume" size={18} /></button>
-          <div className="mini-avatar" aria-label="小小数学家头像">小</div>
+          <div className="mini-avatar" aria-label="小小数学家头像">{lang === 'zh' ? '小' : 'M'}</div>
         </div>
       </header>
 
@@ -165,6 +148,7 @@ function App() {
           activeTask={activeTask}
           completedTasks={completedTasks}
           currentTask={currentTask}
+          lessonTasks={lessonTasks}
           currentTaskComplete={currentTaskComplete}
           lessonComplete={lessonComplete}
           onBack={() => setPage('home')}
@@ -190,18 +174,19 @@ type HomePageProps = {
 }
 
 function HomePage({ progress, lessonComplete, onOpenLesson }: HomePageProps) {
+  const t = useTranslate()
   return (
     <main className="home-page">
       <section className="home-hero page-width">
         <div className="hero-copy">
-          <div className="eyebrow-pill"><span className="eyebrow-dot" />今天也来发现一个数学秘密</div>
-          <h1>数学不是背出来的，<br /><em>是玩出来的。</em></h1>
-          <p className="hero-description">旋转、拆开、拼一拼，亲手把每一个数学知识点变得看得见、摸得着。</p>
+          <div className="eyebrow-pill"><span className="eyebrow-dot" />{t('heroEyebrow')}</div>
+          <h1>{t('heroTitle1')}<br /><em>{t('heroTitle2')}</em></h1>
+          <p className="hero-description">{t('heroDescription')}</p>
           <button className="primary-button hero-button" type="button" onClick={onOpenLesson}>
-            <span>{lessonComplete ? '继续探索长方体' : '开始今天的探索'}</span>
+            <span>{lessonComplete ? t('heroContinue') : t('heroStart')}</span>
             <Icon name="arrow" size={19} />
           </button>
-          <div className="hero-trust"><span className="trust-stars">✦ ✦ ✦</span><span>适合小学 3—5 年级</span><span className="trust-divider" /><span>每次 5 分钟</span></div>
+          <div className="hero-trust"><span className="trust-stars">✦ ✦ ✦</span><span>{t('trustGrade')}</span><span className="trust-divider" /><span>{t('trustTime')}</span></div>
         </div>
         <div className="hero-art" aria-label="数学小方块正在探索长方体">
           <div className="sun-disc" />
@@ -212,54 +197,56 @@ function HomePage({ progress, lessonComplete, onOpenLesson }: HomePageProps) {
           <div className="floating-cube cube-one"><span /></div>
           <div className="floating-cube cube-two"><span /></div>
           <Mascot />
-          <div className="speech-bubble"><span>今天要发现什么？</span><i /></div>
+          <div className="speech-bubble"><span>{t('speech')}</span><i /></div>
         </div>
       </section>
 
       <section className="home-content page-width">
         <div className="section-heading">
           <div>
-            <span className="section-kicker">你的数学小宇宙</span>
-            <h2>想从哪里开始？</h2>
+            <span className="section-kicker">{t('sectionKicker')}</span>
+            <h2>{t('homeHeading')}</h2>
           </div>
-          <button className="text-button" type="button" onClick={onOpenLesson}>看看全部 <Icon name="arrow" size={15} /></button>
+          <button className="text-button" type="button" onClick={onOpenLesson}>{t('seeAll')} <Icon name="arrow" size={15} /></button>
         </div>
 
         <div className="explore-grid">
           <button className="explore-card featured-card" type="button" onClick={onOpenLesson}>
-            <div className="card-topline"><span className="status-chip"><span />正在学习</span><span className="card-arrow"><Icon name="arrow" size={17} /></span></div>
+            <div className="card-topline"><span className="status-chip"><span />{t('learningChip')}</span><span className="card-arrow"><Icon name="arrow" size={17} /></span></div>
             <div className="featured-illustration"><div className="illustration-shadow" /><div className="illustration-box"><i /><b /><strong /></div><div className="illustration-ruler">↔</div></div>
             <div className="card-copy">
-              <span className="card-kicker">空间与几何 · 第 1 课</span>
-              <h3>长方体的秘密</h3>
-              <p>转一转，拉一拉，看看一个盒子能装下多少小方块。</p>
-              <div className="progress-row"><span className="progress-track"><i style={{ width: `${progress}%` }} /></span><strong>{progress ? `${progress}%` : '准备开始'}</strong></div>
+              <span className="card-kicker">{t('card1Kicker')}</span>
+              <h3>{t('card1Title')}</h3>
+              <p>{t('card1Desc')}</p>
+              <div className="progress-row"><span className="progress-track"><i style={{ width: `${progress}%` }} /></span><strong>{progress ? `${progress}%` : t('progressReady')}</strong></div>
             </div>
           </button>
           <button className="explore-card coming-card" type="button" onClick={onOpenLesson}>
-            <div className="card-topline"><span className="status-chip muted-chip">即将到来</span><span className="card-arrow"><Icon name="arrow" size={17} /></span></div>
+            <div className="card-topline"><span className="status-chip muted-chip">{t('comingChip')}</span><span className="card-arrow"><Icon name="arrow" size={17} /></span></div>
             <div className="coming-illustration"><div className="triangle-shape" /><div className="circle-shape" /><div className="square-shape" /><span>?</span></div>
-            <div className="card-copy"><span className="card-kicker">空间与几何 · 第 2 课</span><h3>图形变变变</h3><p>把图形转一转、折一折，找找它们藏起来的规律。</p><span className="coming-link">很快就能玩啦 <span>·</span> 预计 3 个探索</span></div>
+            <div className="card-copy"><span className="card-kicker">{t('card2Kicker')}</span><h3>{t('card2Title')}</h3><p>{t('card2Desc')}</p><span className="coming-link">{t('comingSoon')} <span>·</span> {t('expected')}</span></div>
           </button>
           <button className="explore-card free-card" type="button" onClick={onOpenLesson}>
-            <div className="card-topline"><span className="status-chip free-chip">自由探索</span><span className="card-arrow"><Icon name="arrow" size={17} /></span></div>
+            <div className="card-topline"><span className="status-chip free-chip">{t('freeChip')}</span><span className="card-arrow"><Icon name="arrow" size={17} /></span></div>
             <div className="free-illustration"><span className="free-block block-a" /><span className="free-block block-b" /><span className="free-block block-c" /><span className="free-block block-d" /><span className="free-sparkle">✦</span></div>
-            <div className="card-copy"><span className="card-kicker">数学游乐场</span><h3>随便玩一玩</h3><p>没有任务，只有好奇心。试试你能搭出什么。</p><span className="coming-link dark-link">进入游乐场 <Icon name="arrow" size={14} /></span></div>
+            <div className="card-copy"><span className="card-kicker">{t('freeKicker')}</span><h3>{t('freeTitle')}</h3><p>{t('freeDesc')}</p><span className="coming-link dark-link">{t('enterPlayground')} <Icon name="arrow" size={14} /></span></div>
           </button>
         </div>
 
         <div className="home-bottom-grid">
           <div className="daily-card">
             <div className="daily-icon"><Icon name="sparkle" size={24} /></div>
-            <div><span className="section-kicker">今日小发现</span><h3>同样的体积，可以有不同的形状</h3><p>试着找出两个不一样的长方体，它们都能装下 24 个小方块。</p></div>
-            <button className="round-arrow" type="button" onClick={onOpenLesson} aria-label="打开今日小发现"><Icon name="arrow" size={18} /></button>
+            <div><span className="section-kicker">{t('dailyKicker')}</span><h3>{t('dailyTitle')}</h3><p>{t('dailyDesc')}</p></div>
+            <button className="round-arrow" type="button" onClick={onOpenLesson} aria-label={t('dailyKicker')}><Icon name="arrow" size={18} /></button>
           </div>
-          <div className="streak-card"><div className="streak-orbit"><span>3</span><i>天</i></div><div><span className="section-kicker">探索足迹</span><h3>连续探索 3 天</h3><p>再来一次，就能点亮下一颗星星。</p></div><span className="streak-star">✦</span></div>
+          <div className="streak-card"><div className="streak-orbit"><span>3</span><i>{t('streakDays')}</i></div><div><span className="section-kicker">{t('streakKicker')}</span><h3>{t('streakTitle')}</h3><p>{t('streakDesc')}</p></div><span className="streak-star">✦</span></div>
         </div>
       </section>
     </main>
   )
 }
+
+type LessonTask = { eyebrow: string; title: string; description: string; hint: string }
 
 type LessonPageProps = {
   dimensions: CuboidDimensions
@@ -271,7 +258,8 @@ type LessonPageProps = {
   resetToken: number
   activeTask: number
   completedTasks: boolean[]
-  currentTask: (typeof lessonTasks)[number]
+  currentTask: LessonTask
+  lessonTasks: LessonTask[]
   currentTaskComplete: boolean
   lessonComplete: boolean
   onBack: () => void
@@ -297,6 +285,7 @@ function LessonPage({
   activeTask,
   completedTasks,
   currentTask,
+  lessonTasks,
   currentTaskComplete,
   lessonComplete,
   onBack,
@@ -310,25 +299,28 @@ function LessonPage({
   onAdvanceTask,
   onSelectTask,
 }: LessonPageProps) {
+  const t = useTranslate()
+  const dimensionNames: Record<DimensionKey, string> = { length: t('legendLength'), width: t('legendWidth'), height: t('legendHeight') }
+
   return (
     <main className="lesson-page page-width">
-      <div className="lesson-breadcrumb"><button className="back-button" type="button" onClick={onBack}><Icon name="back" size={17} />返回探索首页</button><span>/</span><span>空间与几何</span><span>/</span><strong>长方体的秘密</strong></div>
-      <div className="lesson-title-row"><div><span className="section-kicker">空间与几何 · 探索 01</span><h1>长方体的秘密</h1></div><div className="lesson-progress"><div className="lesson-progress-copy"><span>探索进度</span><strong>{lessonComplete ? '已完成' : `${completedTasks.filter(Boolean).length} / 3`}</strong></div><span className="progress-track"><i style={{ width: `${lessonComplete ? 100 : Math.max(12, completedTasks.filter(Boolean).length / 3 * 100)}%` }} /></span></div></div>
+      <div className="lesson-breadcrumb"><button className="back-button" type="button" onClick={onBack}><Icon name="back" size={17} />{t('backToExplore')}</button><span>/</span><span>{t('geometry')}</span><span>/</span><strong>{t('cuboidTitle')}</strong></div>
+      <div className="lesson-title-row"><div><span className="section-kicker">{t('lessonKicker')}</span><h1>{t('cuboidTitle')}</h1></div><div className="lesson-progress"><div className="lesson-progress-copy"><span>{t('progressLabel')}</span><strong>{lessonComplete ? t('progressDone') : `${completedTasks.filter(Boolean).length} / 3`}</strong></div><span className="progress-track"><i style={{ width: `${lessonComplete ? 100 : Math.max(12, completedTasks.filter(Boolean).length / 3 * 100)}%` }} /></span></div></div>
 
       <div className="lesson-layout">
         <section className="workbench-card">
-          <div className="workbench-toolbar"><div className="mode-switch" role="tablist" aria-label="视图模式"><button className={displayMode === '3d' ? 'mode-button active' : 'mode-button'} type="button" role="tab" aria-selected={displayMode === '3d'} onClick={() => onChangeDisplayMode('3d')}><Icon name="cube" size={16} />3D 立体</button><button className={displayMode === '2d' ? 'mode-button active' : 'mode-button'} type="button" role="tab" aria-selected={displayMode === '2d'} onClick={() => onChangeDisplayMode('2d')}><Icon name="layers" size={16} />2D 拆解</button></div><div className="toolbar-actions"><button className={showUnits ? 'tool-button active' : 'tool-button'} type="button" onClick={onToggleUnits}><Icon name="layers" size={16} />{showUnits ? '隐藏小方块' : '显示小方块'}</button><button className="tool-button icon-only" type="button" onClick={onReset} aria-label="重置视角"><Icon name="rotate" size={17} /></button></div></div>
+          <div className="workbench-toolbar"><div className="mode-switch" role="tablist" aria-label="视图模式"><button className={displayMode === '3d' ? 'mode-button active' : 'mode-button'} type="button" role="tab" aria-selected={displayMode === '3d'} onClick={() => onChangeDisplayMode('3d')}><Icon name="cube" size={16} />{t('mode3d')}</button><button className={displayMode === '2d' ? 'mode-button active' : 'mode-button'} type="button" role="tab" aria-selected={displayMode === '2d'} onClick={() => onChangeDisplayMode('2d')}><Icon name="layers" size={16} />{t('mode2d')}</button></div><div className="toolbar-actions"><button className={showUnits ? 'tool-button active' : 'tool-button'} type="button" onClick={onToggleUnits}><Icon name="layers" size={16} />{showUnits ? t('hideUnits') : t('showUnits')}</button><button className="tool-button icon-only" type="button" onClick={onReset} aria-label={t('resetView')}><Icon name="rotate" size={17} /></button></div></div>
           <div className="workbench-stage">
             {displayMode === '3d' ? <CuboidScene dimensions={dimensions} selectedDimension={selectedDimension} showUnits={showUnits} resetToken={resetToken} onSelectDimension={onSelectDimension} onChangeDimension={onNudgeDimension} /> : <CuboidDiagram dimensions={dimensions} />}
-            {displayMode === '3d' && <div className="stage-tip"><span className="tip-hand"><Icon name="cursor" size={16} /></span><span>拖动小方块可以改变大小，拖动空白处可以旋转</span></div>}
+            {displayMode === '3d' && <div className="stage-tip"><span className="tip-hand"><Icon name="cursor" size={16} /></span><span>{t('stageTip')}</span></div>}
           </div>
-          <div className="workbench-footer"><div className="selection-note"><span className="selected-dot" style={{ backgroundColor: selectedDimension === 'length' ? '#f39a68' : selectedDimension === 'width' ? '#62bce4' : '#63c69f' }} /><span>当前选中：<strong>{DIMENSION_NAMES[selectedDimension]}</strong></span><small>试试点击另一个彩色小点</small></div><div className="scene-legend"><span><i className="legend-dot orange" />长</span><span><i className="legend-dot blue" />宽</span><span><i className="legend-dot green" />高</span></div></div>
+          <div className="workbench-footer"><div className="selection-note"><span className="selected-dot" style={{ backgroundColor: selectedDimension === 'length' ? '#f39a68' : selectedDimension === 'width' ? '#62bce4' : '#63c69f' }} /><span>{t('selectedLabel')}<strong>{dimensionNames[selectedDimension]}</strong></span><small>{t('tryAnother')}</small></div><div className="scene-legend"><span><i className="legend-dot orange" />{t('legendLength')}</span><span><i className="legend-dot blue" />{t('legendWidth')}</span><span><i className="legend-dot green" />{t('legendHeight')}</span></div></div>
         </section>
 
         <aside className="lesson-sidebar">
-          <section className="mission-card"><div className="mission-header"><div><span className="section-kicker">{currentTask.eyebrow}</span><h2>{currentTask.title}</h2></div><span className="mission-number">0{activeTask + 1}</span></div><p>{currentTask.description}</p><div className={currentTaskComplete ? 'feedback-box success-feedback' : 'feedback-box'}><span className="feedback-icon"><Icon name={currentTaskComplete ? 'check' : 'sparkle'} size={16} /></span><span>{currentTaskComplete ? '做到了！可以继续下一站。' : currentTask.hint}</span></div><button className={currentTaskComplete ? 'primary-button task-button' : 'primary-button task-button disabled-button'} type="button" onClick={onAdvanceTask} disabled={!currentTaskComplete}>{activeTask === 2 && currentTaskComplete ? '完成探索' : '完成这一站'}<Icon name="arrow" size={17} /></button></section>
-          <section className="dimensions-card"><div className="sidebar-heading"><div><span className="section-kicker">我的长方体</span><h2>调一调尺寸</h2></div><button className="reset-link" type="button" onClick={onResetLesson}><Icon name="refresh" size={15} />重置</button></div><div className="dimension-list"><DimensionControl dimension="length" value={dimensions.length} onChange={(value) => onChangeDimension('length', value)} onSelect={() => onSelectDimension('length')} selected={selectedDimension === 'length'} /><DimensionControl dimension="width" value={dimensions.width} onChange={(value) => onChangeDimension('width', value)} onSelect={() => onSelectDimension('width')} selected={selectedDimension === 'width'} /><DimensionControl dimension="height" value={dimensions.height} onChange={(value) => onChangeDimension('height', value)} onSelect={() => onSelectDimension('height')} selected={selectedDimension === 'height'} /></div><div className="formula-card"><div className="formula-label"><span className="formula-symbol">×</span><span>底面积</span></div><strong>{dimensions.length} × {dimensions.width} = {baseArea}<small>平方厘米</small></strong><div className="formula-divider" /><div className="formula-label"><span className="formula-symbol volume-symbol">◆</span><span>体积</span></div><strong className="volume-number">{baseArea} × {dimensions.height} = <b>{volume}</b><small>立方厘米</small></strong></div></section>
-          <section className="route-card"><div className="route-header"><span className="section-kicker">探索路线</span><span>{completedTasks.filter(Boolean).length} / 3 已完成</span></div><div className="route-list">{lessonTasks.map((task, index) => <button className={`route-item ${index === activeTask ? 'active' : ''} ${completedTasks[index] ? 'complete' : ''}`} type="button" key={task.title} onClick={() => onSelectTask(index)} disabled={index > 0 && !completedTasks[index - 1]}><span className="route-marker">{completedTasks[index] ? <Icon name="check" size={13} /> : `0${index + 1}`}</span><span>{task.title}</span><Icon name="arrow" size={14} /></button>)}</div><div className="mascot-note"><Mascot small /><span>每一次尝试，<br /><strong>都是新发现！</strong></span></div></section>
+          <section className="mission-card"><div className="mission-header"><div><span className="section-kicker">{currentTask.eyebrow}</span><h2>{currentTask.title}</h2></div><span className="mission-number">{t('missionNumber', activeTask + 1)}</span></div><p>{currentTask.description}</p><div className={currentTaskComplete ? 'feedback-box success-feedback' : 'feedback-box'}><span className="feedback-icon"><Icon name={currentTaskComplete ? 'check' : 'sparkle'} size={16} /></span><span>{currentTaskComplete ? t('successFeedback') : currentTask.hint}</span></div><button className={currentTaskComplete ? 'primary-button task-button' : 'primary-button task-button disabled-button'} type="button" onClick={onAdvanceTask} disabled={!currentTaskComplete}>{activeTask === 2 && currentTaskComplete ? t('completeExplore') : t('completeStation')}<Icon name="arrow" size={17} /></button></section>
+          <section className="dimensions-card"><div className="sidebar-heading"><div><span className="section-kicker">{t('myCuboid')}</span><h2>{t('adjustTitle')}</h2></div><button className="reset-link" type="button" onClick={onResetLesson}><Icon name="refresh" size={15} />{t('reset')}</button></div><div className="dimension-list"><DimensionControl dimension="length" value={dimensions.length} onChange={(value) => onChangeDimension('length', value)} onSelect={() => onSelectDimension('length')} selected={selectedDimension === 'length'} /><DimensionControl dimension="width" value={dimensions.width} onChange={(value) => onChangeDimension('width', value)} onSelect={() => onSelectDimension('width')} selected={selectedDimension === 'width'} /><DimensionControl dimension="height" value={dimensions.height} onChange={(value) => onChangeDimension('height', value)} onSelect={() => onSelectDimension('height')} selected={selectedDimension === 'height'} /></div><div className="formula-card"><div className="formula-label"><span className="formula-symbol">×</span><span>{t('baseAreaLabel')}</span></div><strong>{dimensions.length} × {dimensions.width} = {baseArea}<small>{t('squareCm')}</small></strong><div className="formula-divider" /><div className="formula-label"><span className="formula-symbol volume-symbol">◆</span><span>{t('volumeLabel')}</span></div><strong className="volume-number">{baseArea} × {dimensions.height} = <b>{volume}</b><small>{t('cubicCm')}</small></strong></div></section>
+          <section className="route-card"><div className="route-header"><span className="section-kicker">{t('routeKicker')}</span><span>{t('routeDone', completedTasks.filter(Boolean).length)}</span></div><div className="route-list">{lessonTasks.map((task, index) => <button className={`route-item ${index === activeTask ? 'active' : ''} ${completedTasks[index] ? 'complete' : ''}`} type="button" key={task.title} onClick={() => onSelectTask(index)} disabled={index > 0 && !completedTasks[index - 1]}><span className="route-marker">{completedTasks[index] ? <Icon name="check" size={13} /> : `0${index + 1}`}</span><span>{task.title}</span><Icon name="arrow" size={14} /></button>)}</div><div className="mascot-note"><Mascot small /><span>{t('mascotNote1')}<br /><strong>{t('mascotNote2')}</strong></span></div></section>
         </aside>
       </div>
     </main>
