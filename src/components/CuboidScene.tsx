@@ -1,6 +1,6 @@
 import { Edges, Html, Line, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ThreeEvent } from '@react-three/fiber'
 import type { DimensionKey } from './DimensionControl'
 import { useTranslate } from '../i18n/i18n'
@@ -42,6 +42,7 @@ function ResizeHandle({
   const dragRef = useRef(false)
   const accumulatorRef = useRef(0)
   const lastPointRef = useRef({ x: 0, y: 0 })
+  const [grabbed, setGrabbed] = useState(false)
 
   useEffect(() => {
     const handleMove = (event: PointerEvent) => {
@@ -52,17 +53,20 @@ function ResizeHandle({
       const movement = dimension === 'length' ? movementX : -movementY
       accumulatorRef.current += movement
 
-      while (Math.abs(accumulatorRef.current) >= 24) {
+      const threshold = event.pointerType === 'touch' ? 18 : 22
+      while (Math.abs(accumulatorRef.current) >= threshold) {
         const direction = accumulatorRef.current > 0 ? 1 : -1
         onChange(direction)
-        accumulatorRef.current -= direction * 24
+        accumulatorRef.current -= direction * threshold
       }
     }
 
     const handleUp = () => {
+      if (!dragRef.current) return
       dragRef.current = false
       accumulatorRef.current = 0
       lastPointRef.current = { x: 0, y: 0 }
+      setGrabbed(false)
       document.body.classList.remove('is-dragging')
     }
 
@@ -80,15 +84,33 @@ function ResizeHandle({
     event.stopPropagation()
     dragRef.current = true
     lastPointRef.current = { x: event.clientX, y: event.clientY }
+    setGrabbed(true)
     onSelect()
     document.body.classList.add('is-dragging')
   }
 
   return (
-    <mesh position={position} onPointerDown={handlePointerDown} onClick={(event) => event.stopPropagation()}>
-      <sphereGeometry args={[selected ? 0.18 : 0.14, 18, 18]} />
-      <meshStandardMaterial color={colors[dimension]} emissive={colors[dimension]} emissiveIntensity={selected ? 0.55 : 0.18} roughness={0.35} />
-    </mesh>
+    <group position={position}>
+      <mesh onPointerDown={handlePointerDown} onClick={(event) => event.stopPropagation()}>
+        <sphereGeometry args={[selected ? 0.18 : 0.14, 18, 18]} />
+        <meshStandardMaterial
+          color={colors[dimension]}
+          emissive={colors[dimension]}
+          emissiveIntensity={grabbed ? 0.75 : selected ? 0.55 : 0.18}
+          roughness={0.35}
+        />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[0.32, 8, 8]} />
+        <meshBasicMaterial visible={false} />
+      </mesh>
+      {grabbed && (
+        <mesh>
+          <ringGeometry args={[0.28, 0.34, 24]} />
+          <meshBasicMaterial color={colors[dimension]} transparent opacity={0.5} side={2} />
+        </mesh>
+      )}
+    </group>
   )
 }
 
@@ -194,6 +216,7 @@ export function CuboidScene({ dimensions, selectedDimension, showUnits, resetTok
       dpr={[1, 1.7]}
       camera={{ position: [7.5, 5.6, 7.5], fov: 38 }}
       gl={{ antialias: true, alpha: true }}
+      style={{ touchAction: 'none' }}
     >
       <SceneContent
         dimensions={dimensions}
